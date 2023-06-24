@@ -2,6 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Bluetooth関係のパーミッション -->
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+
+    <!-- Bluetoothを使うための位置情報パーミッション -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,6 +20,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bluetoothbackground"
         tools:targetApi="31">
+        <service
+            android:name=".bluetoothbk"
+            android:enabled="true"
+            android:exported="false"></service>
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
