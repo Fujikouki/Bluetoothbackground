@@ -45,10 +45,29 @@ class bluetoothbk : Service() {
                     Log.d("MacA", MacAddressSet.toString())
                     return
                 }
+                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+                    Toast.makeText(
+                        context,
+                        "Bluetooth検出開始",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.d("discoveryStart", "Discovery Started")
+                    return
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> { //cancelDiscoveryでも呼ばれる
+
+                    Toast.makeText(
+                        context,
+                        "Bluetooth検出終了",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.d("discoveryFinish", "Discovery finished")
+                }
 
             }
         }
     }
+
 
     override fun onCreate() {
         Log.d("startSuccess2", "onCreate() success")
@@ -73,23 +92,22 @@ class bluetoothbk : Service() {
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
         Log.d("startSuccess4", "onStartCommand() success")
 
-
+        startReceiver()
 
         if(bluetoothAdapter!!.startDiscovery()){
 
             Log.d("startSuccess5", "startDiscovery() success")
 
+        }else{
+            Log.d("startSuccess6", "startDiscovery() No")
         }
-        
-        startReceiver()
-
 
         return START_NOT_STICKY
 
     }
-
     private fun startReceiver() {
         val intent = IntentFilter(BluetoothDevice.ACTION_FOUND)
         registerReceiver(receiver, intent)
