@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -25,6 +27,13 @@
             android:name=".bluetoothbk"
             android:enabled="true"
             android:exported="false"></service>
+
+        <receiver android:name=".bluetoothForegroundReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="com.fujikouki.Bluetoothapp" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
 
 
         <activity

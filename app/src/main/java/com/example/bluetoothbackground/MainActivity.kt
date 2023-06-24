@@ -36,24 +36,18 @@ class MainActivity : AppCompatActivity() {
             when (view.id) {
                 R.id.button -> {
                     Log.d("button1", "startOn")
-                    val intent = Intent(this@MainActivity, bluetoothbk::class.java)
-                    val requestCode = 1
-                    val pendingIntent = PendingIntent.getService(this@MainActivity, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
-                    //startService(intent)
+                    val intent = Intent(this@MainActivity,bluetoothbk::class.java)
+                    startForegroundService(intent);
 
-                    val manager = this@MainActivity.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                    manager.setRepeating(AlarmManager.RTC_WAKEUP, 0,30000, pendingIntent)
 
                 }
 
                 R.id.button2 -> {
                     Log.d("button2", "cancle")
-                    val intent = Intent(this@MainActivity, bluetoothbk::class.java)
-                    val requestCode = 1
-                    val pendingIntent = PendingIntent.getService(this@MainActivity, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-                    val manager = this@MainActivity.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                    manager.cancel(pendingIntent)
+                    val intent = Intent(this@MainActivity,bluetoothbk::class.java)
+                    stopService(intent);
+
 
 
                 }
