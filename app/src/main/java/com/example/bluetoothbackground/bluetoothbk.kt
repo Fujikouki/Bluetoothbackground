@@ -1,22 +1,24 @@
 package com.example.bluetoothbackground
 
 import android.app.Service
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
-import android.content.Intent
-import android.os.IBinder
 import android.content.Context
-import android.util.Log
+import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
-import android.provider.Settings
-import android.widget.Toast
-
+import android.os.IBinder
+import android.util.Log
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import androidx.core.app.NotificationCompat
+import android.app.AlarmManager
 class bluetoothbk : Service() {
-
-    private val REQUEST_ENABLEBLUETOOTH: Int = 1
-    private val MY_REQUEST_CODE: Int = 2
+    companion object {
+        const val CHANNEL_ID = "1111"
+    }
 
     private var bluetoothAdapter: BluetoothAdapter? = null
 
@@ -25,6 +27,7 @@ class bluetoothbk : Service() {
     var MacAddressSet = mutableSetOf<String?>()
 
     private val receiver = object : BroadcastReceiver() {
+
         override fun onReceive(context: Context, intent: Intent) {
             //Log.d("startSuccess1", "onReceive() success")
             val action: String? = intent.action
@@ -45,31 +48,16 @@ class bluetoothbk : Service() {
                     Log.d("MacA", MacAddressSet.toString())
                     return
                 }
-                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
-                    Toast.makeText(
-                        context,
-                        "Bluetooth検出開始",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    Log.d("discoveryStart", "Discovery Started")
-                    return
-                }
-                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> { //cancelDiscoveryでも呼ばれる
-
-                    Toast.makeText(
-                        context,
-                        "Bluetooth検出終了",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    Log.d("discoveryFinish", "Discovery finished")
-                }
-
             }
         }
     }
 
 
+
+
     override fun onCreate() {
+
+
         Log.d("startSuccess2", "onCreate() success")
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -79,7 +67,7 @@ class bluetoothbk : Service() {
             return
 
         }
-        var locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        var locationManager: LocationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
 
@@ -87,11 +75,40 @@ class bluetoothbk : Service() {
 
         Log.d("startSuccess3", "onCreate() success")
 
-
     }
 
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        MacAddressSet.clear()
+
+        val openIntent = Intent(this, MainActivity::class.java).let {
+            PendingIntent.getActivity(this, 0, it, 0)
+        }
+        val channelId = CHANNEL_ID
+        val channelName = "TestService Channel"
+        val channel = NotificationChannel(
+            channelId, channelName,
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(channel)
+
+        val sendIntent = Intent(this, bluetoothbk::class.java).apply {
+            action = Intent.ACTION_SEND
+        }
+        val sendPendingIntent = PendingIntent.getBroadcast(this, 0, sendIntent, 0)
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID )
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("すれ違い検出中")
+            .setContentText("終了する場合はこちらから行って下さい。")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(openIntent)
+            .addAction(R.drawable.ic_launcher_foreground, "スキャン終了", sendPendingIntent)
+            .build()
+
+        startForeground(2222, notification)
+
 
         Log.d("startSuccess4", "onStartCommand() success")
 
@@ -102,12 +119,45 @@ class bluetoothbk : Service() {
             Log.d("startSuccess5", "startDiscovery() success")
 
         }else{
+
             Log.d("startSuccess6", "startDiscovery() No")
+
         }
+
+        setNextAlarmService(this)
 
         return START_NOT_STICKY
 
     }
+    private fun setNextAlarmService(context: Context) {
+
+        val repeatPeriod: Long = 1* 60 * 1000
+
+        val intent = Intent(context, bluetoothbk::class.java)
+
+        val startMillis = System.currentTimeMillis() + repeatPeriod
+
+        val pendingIntent = PendingIntent.getService(context, 0, intent, 0)
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            startMillis,
+            pendingIntent
+        )
+    }
+    private fun stopAlarmService() {
+        val intent = Intent(this, bluetoothbk::class.java)
+        val pendingIntent = PendingIntent.getService(this, 0, intent, 0)
+
+        val alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager?
+        alarmManager?.cancel(pendingIntent)
+    }
+
+    override fun stopService(name: Intent?): Boolean {
+        return super.stopService(name)
+    }
+
     private fun startReceiver() {
         val intent = IntentFilter(BluetoothDevice.ACTION_FOUND)
         registerReceiver(receiver, intent)
@@ -115,6 +165,8 @@ class bluetoothbk : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        bluetoothAdapter!!.cancelDiscovery()
+        stopAlarmService()
         unregisterReceiver(receiver)
 
     }
