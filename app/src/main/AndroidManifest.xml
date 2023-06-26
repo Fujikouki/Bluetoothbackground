@@ -26,7 +26,8 @@
         <service
             android:name=".bluetoothbk"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false">
+        </service>
 
         <receiver android:name=".bluetoothForegroundReceiver" android:exported="true">
             <intent-filter>

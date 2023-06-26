@@ -1,14 +1,12 @@
 package com.example.bluetoothbackground
 
-import android.app.AlarmManager
-import android.app.PendingIntent
+
+import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.widget.Button
 import android.view.View
-import android.content.Context
 import android.util.Log
 
 
@@ -40,7 +38,6 @@ class MainActivity : AppCompatActivity() {
                     val intent = Intent(this@MainActivity,bluetoothbk::class.java)
                     startForegroundService(intent);
 
-
                 }
 
                 R.id.button2 -> {
@@ -48,18 +45,12 @@ class MainActivity : AppCompatActivity() {
                     val intent = Intent(this@MainActivity,bluetoothbk::class.java)
                     stopService(intent);
 
-
-
                 }
             }
 
 
         }
     }
-
-
-
-
 
 }
 

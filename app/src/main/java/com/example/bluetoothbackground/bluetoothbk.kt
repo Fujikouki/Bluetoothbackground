@@ -20,15 +20,14 @@ class bluetoothbk : Service() {
         const val CHANNEL_ID = "1111"
     }
 
-    private val REQUEST_ENABLEBLUETOOTH: Int = 1
-    private val MY_REQUEST_CODE: Int = 2
-
     private var bluetoothAdapter: BluetoothAdapter? = null
 
     private var gpsEnabled: Boolean = false
 
     var MacAddressSet = mutableSetOf<String?>()
+
     private val receiver = object : BroadcastReceiver() {
+
         override fun onReceive(context: Context, intent: Intent) {
             //Log.d("startSuccess1", "onReceive() success")
             val action: String? = intent.action
@@ -57,6 +56,8 @@ class bluetoothbk : Service() {
 
 
     override fun onCreate() {
+
+
         Log.d("startSuccess2", "onCreate() success")
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -74,18 +75,15 @@ class bluetoothbk : Service() {
 
         Log.d("startSuccess3", "onCreate() success")
 
-
-
-
     }
 
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        //1．通知領域タップで戻ってくる先のActivity
+
+        MacAddressSet.clear()
+
         val openIntent = Intent(this, MainActivity::class.java).let {
             PendingIntent.getActivity(this, 0, it, 0)
         }
-        //2．通知チャネル登録
         val channelId = CHANNEL_ID
         val channelName = "TestService Channel"
         val channel = NotificationChannel(
@@ -94,21 +92,21 @@ class bluetoothbk : Service() {
         )
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
-        //3．ブロードキャストレシーバーをPendingIntent化
+
         val sendIntent = Intent(this, bluetoothbk::class.java).apply {
             action = Intent.ACTION_SEND
         }
         val sendPendingIntent = PendingIntent.getBroadcast(this, 0, sendIntent, 0)
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID )
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("フォアグラウンドのテスト中")
+            .setContentTitle("すれ違い検出中")
             .setContentText("終了する場合はこちらから行って下さい。")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(openIntent)
-            .addAction(R.drawable.ic_launcher_foreground, "実行終了", sendPendingIntent)
+            .addAction(R.drawable.ic_launcher_foreground, "スキャン終了", sendPendingIntent)
             .build()
 
-        //5．フォアグラウンド開始。
         startForeground(2222, notification)
 
 
@@ -118,11 +116,12 @@ class bluetoothbk : Service() {
 
         if(bluetoothAdapter!!.startDiscovery()){
 
-
             Log.d("startSuccess5", "startDiscovery() success")
 
         }else{
+
             Log.d("startSuccess6", "startDiscovery() No")
+
         }
 
         setNextAlarmService(this)
@@ -130,11 +129,9 @@ class bluetoothbk : Service() {
         return START_NOT_STICKY
 
     }
-    // 次のアラームの設定
     private fun setNextAlarmService(context: Context) {
 
-        // 15分毎のアラーム設定
-        val repeatPeriod: Long = 1 * 60 * 1000
+        val repeatPeriod: Long = 1* 60 * 1000
 
         val intent = Intent(context, bluetoothbk::class.java)
 
@@ -143,7 +140,6 @@ class bluetoothbk : Service() {
         val pendingIntent = PendingIntent.getService(context, 0, intent, 0)
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        // Android Oreo 以上を想定
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             startMillis,
@@ -154,7 +150,6 @@ class bluetoothbk : Service() {
         val intent = Intent(this, bluetoothbk::class.java)
         val pendingIntent = PendingIntent.getService(this, 0, intent, 0)
 
-        // アラームを解除する
         val alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager?
         alarmManager?.cancel(pendingIntent)
     }
@@ -170,6 +165,8 @@ class bluetoothbk : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        bluetoothAdapter!!.cancelDiscovery()
+        stopAlarmService()
         unregisterReceiver(receiver)
 
     }
